@@ -125,7 +125,7 @@ w
 
     ## [1] FALSE
 
-![and\_or 연산자](image/and_or.PNG)
+![and\_or 연산자](assets/img/and_or.PNG)
 
 <br> - 파란 부분의 1은 모든 수로 바꿔도 TRUE 다.
 
