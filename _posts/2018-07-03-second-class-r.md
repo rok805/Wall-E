@@ -124,9 +124,10 @@ w
 ```
 
     ## [1] FALSE
+
 <br><br><br>
 
-![and_or 연산자](assets/img/and_or.PNG)
+![and_or 연산자](/assets/img/and_or.PNG)
 
 <br><br><br>
 <br> - 파란 부분의 1은 모든 수로 바꿔도 TRUE 다.
