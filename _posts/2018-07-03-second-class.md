@@ -2,8 +2,8 @@
 layout: post
 title: 두번째 수업_경희대
 description: "Just about everything you'll need to style in the theme: headings, paragraphs, blockquotes, tables, code blocks, and more."
-modified: 2014-12-24
-tags: [sample post]
+modified: 2018-07-03
+tags: [second_class]
 image:
   feature: abstract-3.jpg
   credit: dargadgetz
