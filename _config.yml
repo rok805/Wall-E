@@ -8,3 +8,5 @@ paginate: 15
 baseurl: /
 plugins: [jekyll-gist]
 permalink: /:year/:month/:title.html
+image:
+  background: assets/img/IMG_0527.JPG
