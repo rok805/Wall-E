@@ -8,3 +8,4 @@ tags: [second_class]
 
 `세번째 수업`
 
+![](/assets/img/IMG_0527.JPG)
