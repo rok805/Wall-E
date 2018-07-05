@@ -6,10 +6,6 @@ modified: 2018-07-05
 tags: [fourth_class]
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # 회귀분석
 - 변수들 간의 관계를 설명하는 통계적모형을 생성하는 기법
 
@@ -340,3 +336,231 @@ abline(m, col='red') # 모델의 직선을 산점도에 입힌다.
 ```
 
 ![](/assets/img/unnamed-chunk-7-1.png)
+
+
+#### m 모형으로 데이터 예측
+
+``` r
+# 키의 단위가 cm 가 아니라서 해석할 때 헷갈렸다.
+new.data <- data.frame(height=c(75,76)) # 데이터프레임의 컬럼명과 예측하려는 독립변수의 이름이 같아야한다 ! 그래야 인식함.
+predict(m, newdata=new.data)
+```
+
+    ##        1        2 
+    ## 171.2333 174.6833
+
+``` r
+m
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = weight ~ height, data = women)
+    ## 
+    ## Coefficients:
+    ## (Intercept)       height  
+    ##      -87.52         3.45
+
+#### 신뢰구간 예측
+
+점추정시 불확실하니까 구간추정을 해봄. interval = "confidence"를 입력하자.
+
+``` r
+new.data <- data.frame(height=c(75,76))
+predict(m, newdata = new.data, interval = "confidence")
+```
+
+    ##        fit      lwr      upr
+    ## 1 171.2333 169.0885 173.3781
+    ## 2 174.6833 172.3565 177.0102
+
+#### autoparts 데이터 예측
+
+``` r
+head(autoparts2)
+```
+
+    ##   fix_time a_speed b_speed separation s_separation rate_terms  mpa
+    ## 1     85.5   0.611   1.715      242.0        657.6         95 78.2
+    ## 2     86.2   0.606   1.708      244.7        657.1         95 77.9
+    ## 3     86.0   0.609   1.715      242.7        657.5         95 78.0
+    ## 4     86.1   0.610   1.718      241.9        657.3         95 78.2
+    ## 5     86.1   0.603   1.704      242.5        657.3         95 77.9
+    ## 6     86.3   0.606   1.707      244.5        656.9         95 77.9
+    ##   load_time highpressure_time c_thickness
+    ## 1      18.1                58        24.7
+    ## 2      18.2                58        22.5
+    ## 3      18.1                82        24.1
+    ## 4      18.1                74        25.1
+    ## 5      18.2                56        24.5
+    ## 6      18.0                78        22.9
+
+``` r
+m <- lm(c_thickness~fix_time, data=autoparts2)
+new.data <- data.frame(fix_time=c(86,88,87,89))
+predict(m, newdata = new.data)
+```
+
+    ##        1        2        3        4 
+    ## 23.62751 23.47857 23.55304 23.40409
+
+다중 선형 회귀 분석
+-------------------
+
+-   독립변수가 2개 이상인 경우에 다중 선형 회귀 분석을 이용한다.
+
+``` r
+autoparts <- read.csv("autoparts.csv",header=T)
+autoparts1 <- autoparts[autoparts$prod_no=='90784-76001',c(2:11)]
+autoparts2 <- autoparts1[autoparts1$c_thickness<1000,]
+m <- lm(c_thickness~fix_time+a_speed, data=autoparts2) # 독립변수 2개를 설정한 경우.
+m <- lm(c_thickness~., data=autoparts2)
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ ., data = autoparts2)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -24.8428  -0.6105  -0.0214   0.5606  29.6508 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error  t value Pr(>|t|)    
+    ## (Intercept)        7.146e+02  3.367e+00  212.225  < 2e-16 ***
+    ## fix_time           6.010e-02  5.331e-03   11.273  < 2e-16 ***
+    ## a_speed           -1.738e+01  4.223e-01  -41.152  < 2e-16 ***
+    ## b_speed            1.952e+00  1.516e-01   12.876  < 2e-16 ***
+    ## separation        -7.592e-01  3.635e-03 -208.873  < 2e-16 ***
+    ## s_separation      -7.468e-01  3.673e-03 -203.317  < 2e-16 ***
+    ## rate_terms         1.133e-02  3.597e-03    3.151  0.00163 ** 
+    ## mpa               -1.520e-01  1.458e-03 -104.253  < 2e-16 ***
+    ## load_time         -1.523e-01  8.381e-03  -18.171  < 2e-16 ***
+    ## highpressure_time -2.174e-05  8.738e-06   -2.488  0.01284 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.796 on 21757 degrees of freedom
+    ## Multiple R-squared:  0.7841, Adjusted R-squared:  0.784 
+    ## F-statistic:  8782 on 9 and 21757 DF,  p-value: < 2.2e-16
+
+-   모형
+-   통계적 유의성은 p 값으로 확인.
+    -   각 회귀계수 별로 p 값을 확인하여 회귀계수가 유의한지 판단한다.
+    -   전체 모형의 유의성을 알기위해 F 통계량을 통한 p 값을 통해 판단한다.
+-   통계적 설명력은 R-squared 값으로 확인.
+    -   R-squared 값이 0.784로 약 78% 정도의 설명력을 갖는다고 할 수 있다.
+#### m 모형으로 데이터 예측
+
+``` r
+# 키의 단위가 cm 가 아니라서 해석할 때 헷갈렸다.
+new.data <- data.frame(height=c(75,76)) # 데이터프레임의 컬럼명과 예측하려는 독립변수의 이름이 같아야한다 ! 그래야 인식함.
+predict(m, newdata=new.data)
+```
+
+    ##        1        2 
+    ## 171.2333 174.6833
+
+``` r
+m
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = weight ~ height, data = women)
+    ## 
+    ## Coefficients:
+    ## (Intercept)       height  
+    ##      -87.52         3.45
+
+#### 신뢰구간 예측
+
+점추정시 불확실하니까 구간추정을 해봄. interval = "confidence"를 입력하자.
+
+``` r
+new.data <- data.frame(height=c(75,76))
+predict(m, newdata = new.data, interval = "confidence")
+```
+
+    ##        fit      lwr      upr
+    ## 1 171.2333 169.0885 173.3781
+    ## 2 174.6833 172.3565 177.0102
+
+#### autoparts 데이터 예측
+
+``` r
+head(autoparts2)
+```
+
+    ##   fix_time a_speed b_speed separation s_separation rate_terms  mpa
+    ## 1     85.5   0.611   1.715      242.0        657.6         95 78.2
+    ## 2     86.2   0.606   1.708      244.7        657.1         95 77.9
+    ## 3     86.0   0.609   1.715      242.7        657.5         95 78.0
+    ## 4     86.1   0.610   1.718      241.9        657.3         95 78.2
+    ## 5     86.1   0.603   1.704      242.5        657.3         95 77.9
+    ## 6     86.3   0.606   1.707      244.5        656.9         95 77.9
+    ##   load_time highpressure_time c_thickness
+    ## 1      18.1                58        24.7
+    ## 2      18.2                58        22.5
+    ## 3      18.1                82        24.1
+    ## 4      18.1                74        25.1
+    ## 5      18.2                56        24.5
+    ## 6      18.0                78        22.9
+
+``` r
+m <- lm(c_thickness~fix_time, data=autoparts2)
+new.data <- data.frame(fix_time=c(86,88,87,89))
+predict(m, newdata = new.data)
+```
+
+    ##        1        2        3        4 
+    ## 23.62751 23.47857 23.55304 23.40409
+
+다중 선형 회귀 분석
+-------------------
+
+-   독립변수가 2개 이상인 경우에 다중 선형 회귀 분석을 이용한다.
+
+``` r
+autoparts <- read.csv("autoparts.csv",header=T)
+autoparts1 <- autoparts[autoparts$prod_no=='90784-76001',c(2:11)]
+autoparts2 <- autoparts1[autoparts1$c_thickness<1000,]
+m <- lm(c_thickness~fix_time+a_speed, data=autoparts2) # 독립변수 2개를 설정한 경우.
+m <- lm(c_thickness~., data=autoparts2)
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ ., data = autoparts2)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -24.8428  -0.6105  -0.0214   0.5606  29.6508 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error  t value Pr(>|t|)    
+    ## (Intercept)        7.146e+02  3.367e+00  212.225  < 2e-16 ***
+    ## fix_time           6.010e-02  5.331e-03   11.273  < 2e-16 ***
+    ## a_speed           -1.738e+01  4.223e-01  -41.152  < 2e-16 ***
+    ## b_speed            1.952e+00  1.516e-01   12.876  < 2e-16 ***
+    ## separation        -7.592e-01  3.635e-03 -208.873  < 2e-16 ***
+    ## s_separation      -7.468e-01  3.673e-03 -203.317  < 2e-16 ***
+    ## rate_terms         1.133e-02  3.597e-03    3.151  0.00163 ** 
+    ## mpa               -1.520e-01  1.458e-03 -104.253  < 2e-16 ***
+    ## load_time         -1.523e-01  8.381e-03  -18.171  < 2e-16 ***
+    ## highpressure_time -2.174e-05  8.738e-06   -2.488  0.01284 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.796 on 21757 degrees of freedom
+    ## Multiple R-squared:  0.7841, Adjusted R-squared:  0.784 
+    ## F-statistic:  8782 on 9 and 21757 DF,  p-value: < 2.2e-16
+
+-   모형
+-   통계적 유의성은 p 값으로 확인.
+    -   각 회귀계수 별로 p 값을 확인하여 회귀계수가 유의한지 판단한다.
+    -   전체 모형의 유의성을 알기위해 F 통계량을 통한 p 값을 통해 판단한다.
+-   통계적 설명력은 R-squared 값으로 확인.
+    -   R-squared 값이 0.784로 약 78% 정도의 설명력을 갖는다고 할 수 있다.
