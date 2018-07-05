@@ -6,11 +6,6 @@ modified: 2018-07-05
 tags: [fourth_class]
 ---
 
----
-title: "2018-07-05-fourth-class"
-output: github_document
----
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -64,3 +59,284 @@ knitr::opts_chunk$set(echo = TRUE)
   - 독립변수(x)와 종속변수(y) 값들이 주어진 경우, 이 점들을 가장 잘 설명할 수 있는 일차식을 도출
   
 ![](/assets/img/180705_단순회귀식.PNG)
+
+
+2018-07-05-fourth-class
+================
+
+회귀분석
+========
+
+-   변수들 간의 관계를 설명하는 통계적모형을 생성하는 기법
+
+정형 데이터 분석 -&gt; 결과변수의 유무에 따라 지도/비지도 학습으로 나뉨. 지도 학습에는 분류, 추정, 예측이 있고, 이 중 추정을 보도록하자.
+
+-   추정 (결과변수가 연속형=숫자=실수)
+    -   데이터 분석 기법
+    -   데이터 수집
+    -   데이터 전처리
+    -   분석 : 회귀분석
+    -   모델링 : 회귀 모형
+    -   분석결과 해석 : 회귀계수, 결정계수, R제곱.
+    -   예측
+
+**우선적으로 상관관계와 인과관계에 대해 알아보면** 1.상관관계 : 원인과 결과가 불명확한 관계 2.인과관계 : 상관관계가 있는 전제하에 인과관계를 분석하는데, 원인과 결과가 명확한 관계를 말함.
+
+\*\* 회귀분석은 인과관계를 입증할 수 있음 \*\* - 회귀분석은 상관관계를 보고 인과관계를 규명하고자 하여 시작한 것이기 때문
+
+### 주요 개념
+
+1.  독립변수, 입력변수, 설명변수 = 회귀분석에서 영향을 주는 변수
+2.  종속변수, 반응변수, 출력변수 = 회귀분석에서 영향을 받는 변수
+
+### 회귀분석의 종류
+
+-   y가 1개
+
+1.  단순회귀(x가 1개)
+    -   간명성: 간결하고 선명하여 실생활에서 많이 쓰인다. 간단하게 금방 결과가 나오니까.
+2.  다중회귀(x가 여러개)
+
+-   독립변수가 범주형인 경우 더미변수로 치환을 하여 분석을 하면 된다. (ex 상/중/하)
+-   y가 2개 이상 &lt;= 고급.
+
+1.  이항회귀(ex 로지스틱 이항회귀분석) : y가 2개 이상 범주형이여야함.
+2.  다항회귀(ex 로지스틱 다항회귀분석) : y가 3개 이상 범주형이여야함
+
+### 회귀분석의 활용
+
+1.  지역별 매출 또는 점유율 추정
+2.  고객 이탈 예측
+
+-   로지스틱 회귀분석
+
+### 선형 회귀분석 기초
+
+-   하나의 독립 변수와 하나의 종속 변수 간의 선형 관계를 찾는 것
+-   독립변수(x)와 종속변수(y) 값들이 주어진 경우, 이 점들을 가장 잘 설명할 수 있는 일차식을 도출
+
+    -식을 통해 절편, 기울기, 오차항을 확인할 수 있다.
+
+### R square 결정계수.
+
+-   Y의 변동 중에서 회귀식에 의해 설명되는 비율.
+-   0과1 사이의 값.
+-   SSR/TSS (cf. TSS = SSE + SSR)
+
+### 회귀분석의 기본 가정
+
+-   등분산성 : 오차항은 동일한 분산을 가져야한다.
+-   독립성 : 오차항 간의 상관관계는 없어야 한다. (Durbin-Watson 검정통계량)
+-   정규성 : 오차항은 평균이 0인 정규분포을 따라야 한다.(Shapiro-Wilks 검정)
+-   다중공선성 : 교호성. 다중회귀분석의 경우에 발생하며, 독립변수들간의 상관관계가 없어야 한다.(VIF&gt;2.5이면 의심) 상관성이 높은 독립 변수를 제거한 후 분석을 수행한다.
+
+### 실습 ( 교육용 데이터 autoparts.csv 파일을 받아와서 실습한다.)
+
+#### 데이터 확인과 결측치 확인 작업 : read.csv(), dim() is.na(), complete.cases()
+
+``` r
+autoparts <- read.csv("autoparts.csv", header=T)
+dim(autoparts) #차원을 확인해 보자
+```
+
+    ## [1] 34139    11
+
+``` r
+sum(is.na(autoparts)) # NA 가 FALSE인 것들의 합. 즉 NA의 개수를 출력해준다.
+```
+
+    ## [1] 0
+
+``` r
+sum(complete.cases(autoparts)) # is.na 와 반대로 NA 가 TRUE인 것들이 합을 출력
+```
+
+    ## [1] 34139
+
+#### french\_fries 데이터
+
+``` r
+#install.packages("reshape2")
+library(reshape2)
+```
+
+    ## Warning: package 'reshape2' was built under R version 3.5.1
+
+``` r
+head(french_fries)
+```
+
+    ##    time treatment subject rep potato buttery grassy rancid painty
+    ## 61    1         1       3   1    2.9     0.0    0.0    0.0    5.5
+    ## 25    1         1       3   2   14.0     0.0    0.0    1.1    0.0
+    ## 62    1         1      10   1   11.0     6.4    0.0    0.0    0.0
+    ## 26    1         1      10   2    9.9     5.9    2.9    2.2    0.0
+    ## 63    1         1      15   1    1.2     0.1    0.0    1.1    5.1
+    ## 27    1         1      15   2    8.8     3.0    3.6    1.5    2.3
+
+``` r
+french_fries[!(complete.cases(french_fries)),]
+```
+
+    ##     time treatment subject rep potato buttery grassy rancid painty
+    ## 315    5         3      15   1     NA      NA     NA     NA     NA
+    ## 455    7         2      79   1    7.3      NA    0.0    0.7      0
+    ## 515    8         1      79   1   10.5      NA    0.0    0.5      0
+    ## 520    8         2      16   1    4.5      NA    1.4    6.7      0
+    ## 563    8         2      79   2    5.7       0    1.4    2.3     NA
+
+#### 데이터 분리
+
+``` r
+# 데이터 프레임 분리 형식 : 데이터프레임[어떤 행을 추출할 것인가, 어느 열을 추출할 것인가]
+autoparts1 <- autoparts[autoparts$prod_no=='90784-76001',c(2:11)] 
+head(autoparts1)
+```
+
+    ##   fix_time a_speed b_speed separation s_separation rate_terms  mpa
+    ## 1     85.5   0.611   1.715      242.0        657.6         95 78.2
+    ## 2     86.2   0.606   1.708      244.7        657.1         95 77.9
+    ## 3     86.0   0.609   1.715      242.7        657.5         95 78.0
+    ## 4     86.1   0.610   1.718      241.9        657.3         95 78.2
+    ## 5     86.1   0.603   1.704      242.5        657.3         95 77.9
+    ## 6     86.3   0.606   1.707      244.5        656.9         95 77.9
+    ##   load_time highpressure_time c_thickness
+    ## 1      18.1                58        24.7
+    ## 2      18.2                58        22.5
+    ## 3      18.1                82        24.1
+    ## 4      18.1                74        25.1
+    ## 5      18.2                56        24.5
+    ## 6      18.0                78        22.9
+
+#### 기본 통계 정보 - summary(), boxplot()
+
+``` r
+#회귀식에선 이상치(outlier)로 인해 예측정확도가 뚝 떨어지므로 summary 를 활용하여 평균, 최대최소값을 확인해야한다.
+summary(autoparts1) # 사분위수, 최댓값, 최솟값, 중앙값.
+```
+
+    ##     fix_time         a_speed          b_speed        separation   
+    ##  Min.   :  1.00   Min.   :0.4570   Min.   :1.240   Min.   :141.6  
+    ##  1st Qu.: 81.00   1st Qu.:0.5980   1st Qu.:1.597   1st Qu.:185.9  
+    ##  Median : 82.10   Median :0.6090   Median :1.640   Median :190.7  
+    ##  Mean   : 83.14   Mean   :0.6189   Mean   :1.644   Mean   :214.5  
+    ##  3rd Qu.: 85.40   3rd Qu.:0.6520   3rd Qu.:1.676   3rd Qu.:248.7  
+    ##  Max.   :148.60   Max.   :0.8080   Max.   :2.528   Max.   :294.5  
+    ##   s_separation     rate_terms         mpa          load_time    
+    ##  Min.   :623.3   Min.   :76.00   Min.   :24.80   Min.   : 0.00  
+    ##  1st Qu.:651.6   1st Qu.:81.00   1st Qu.:75.30   1st Qu.:18.10  
+    ##  Median :710.3   Median :85.00   Median :76.60   Median :19.20  
+    ##  Mean   :685.9   Mean   :84.53   Mean   :74.21   Mean   :18.68  
+    ##  3rd Qu.:713.6   3rd Qu.:87.00   3rd Qu.:78.10   3rd Qu.:19.20  
+    ##  Max.   :747.3   Max.   :97.00   Max.   :82.10   Max.   :22.30  
+    ##  highpressure_time   c_thickness     
+    ##  Min.   :   37.00   Min.   :   0.30  
+    ##  1st Qu.:   60.00   1st Qu.:  21.80  
+    ##  Median :   67.00   Median :  23.80  
+    ##  Mean   :   96.36   Mean   :  27.44  
+    ##  3rd Qu.:   72.00   3rd Qu.:  25.40  
+    ##  Max.   :65534.00   Max.   :6553.40
+
+``` r
+#시각적으로 이상치를 확인하기 위해 boxplot()을 사용한다.
+boxplot(autoparts1)
+```
+
+![](/assets/img/unnamed-chunk-4-1.png)
+
+``` r
+# 두개의 변수에서 이상치를 볼 수 있다. 이상치가 너무 크니까 상자그림이 납작해 보인다.
+
+
+# 이상치를 제거해본다
+autoparts2 <- autoparts1[autoparts1$c_thickness<1000,]
+nrow(autoparts)
+```
+
+    ## [1] 34139
+
+#### 히스토그램 : 데이터 분포
+
+``` r
+hist(autoparts2$c_thickness, breaks=10) # breaks로 구간설정 가능. 값이 커질수록 막대가 많아진다고 생각하면 쉽다.
+```
+
+![](/assets/img/unnamed-chunk-5-1.png)
+
+#### 회귀 모형 만들기 실습 : lm(), summary(lm())
+
+``` r
+women
+```
+
+    ##    height weight
+    ## 1      58    115
+    ## 2      59    117
+    ## 3      60    120
+    ## 4      61    123
+    ## 5      62    126
+    ## 6      63    129
+    ## 7      64    132
+    ## 8      65    135
+    ## 9      66    139
+    ## 10     67    142
+    ## 11     68    146
+    ## 12     69    150
+    ## 13     70    154
+    ## 14     71    159
+    ## 15     72    164
+
+``` r
+m<-lm(weight~height, data=women) # lm(종속변수~독립변수, data=데이터)
+m
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = weight ~ height, data = women)
+    ## 
+    ## Coefficients:
+    ## (Intercept)       height  
+    ##      -87.52         3.45
+
+``` r
+# 비즈니스적 사고: 몸무게가 10이면 키가 -값이 나옴. 그러니까 비즈니스에 대한 이해가 중요하다.
+
+
+# summary()를 이용한 모델의 통계적 유의성을 살펴보자.
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = weight ~ height, data = women)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.7333 -1.1333 -0.3833  0.7417  3.1167 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -87.51667    5.93694  -14.74 1.71e-09 ***
+    ## height        3.45000    0.09114   37.85 1.09e-14 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.525 on 13 degrees of freedom
+    ## Multiple R-squared:  0.991,  Adjusted R-squared:  0.9903 
+    ## F-statistic:  1433 on 1 and 13 DF,  p-value: 1.091e-14
+
+``` r
+# p 값으로 통계적 유의하다고 할지 말지를 결정한다.
+# 모델의 설명력을 나타내는 R-squared 값 확인
+# Adjusted R-squared : 독립변수가 많아질수록 값이 커지는 현상을 방지.
+```
+
+#### 그래프로 그리기 plot()
+
+``` r
+plot(women$height, women$weight) # 데이터 산점도 plot(x,y)
+abline(m, col='red') # 모델의 직선을 산점도에 입힌다.
+```
+
+![](/assets/img/unnamed-chunk-7-1.png)
