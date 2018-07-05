@@ -564,3 +564,448 @@ summary(m)
     -   전체 모형의 유의성을 알기위해 F 통계량을 통한 p 값을 통해 판단한다.
 -   통계적 설명력은 R-squared 값으로 확인.
     -   R-squared 값이 0.784로 약 78% 정도의 설명력을 갖는다고 할 수 있다.
+
+
+
+#### 잔차 분석
+
+``` r
+plot(m)
+```
+
+![](/assets/img/unnamed-chunk-12-1.png)![](/assets/img/unnamed-chunk-12-2.png)![](/assets/img/unnamed-chunk-12-3.png)![](/assets/img/unnamed-chunk-12-4.png) 1. 오차와 예측값 잔차 그림. 오차가 0인걸 기준으로해서 잔차가 어떻게 분포되어있는지, c\_thickness 가 작을때와 클때 어떤지. 잔차=0인 직선몰려 직선인 경우가 가장 좋다. 2. 직선을 이루고 있지 않기때문에 x가 작을 때랑 큰 값을 가질 때는 회귀모형으로 측정하기엔 문제가 있다. 정규 분포를 따르지 않기 때문에. 3. 표준화 잔차. 잔차들을 표준편차로 나누고 제곱근을 씌워 0~1이 값을 가지게 만든다. 기울기가 0인 직선이 이상적이다. 4. 왼쪽에 가까울수록 Leverage 0에 가까울수록 좋고, cook-distance거리 안에 있어야함. 벗어난게 있으면 곤란함.
+
+#### 다중 회귀 분석 예측
+
+-   한개의 데이터를 추정해보기
+
+``` r
+new.data = data.frame(fix_time=86.1, a_speed=0.610, b_speed=1.718,
+                      separation=241.9,s_separation=657.3,rate_terms=95,
+                      mpa=78.2,load_time=18.1,highpressure_time=74)
+
+predict(m, newdata = new.data)
+```
+
+    ##        1 
+    ## 24.42798
+
+-   두 개의 데이터를 추정해보기
+
+``` r
+new.data = data.frame(fix_time=c(86.1,86.1), a_speed=c(0.610,0.603), b_speed=c(1.718,1.704),
+                      separation=c(241.9,242.5),s_separation=c(657.3,657.3),rate_terms=c(95,95),
+                      mpa=c(78.2,77.9),load_time=c(18.1,18.2),highpressure_time=c(74,56))
+
+predict(m, newdata = new.data)
+```
+
+    ##        1        2 
+    ## 24.42798 24.09751
+
+#### 신뢰구간 구하기
+
+``` r
+new.data = data.frame(fix_time=c(86.1,86.1), a_speed=c(0.610,0.603), b_speed=c(1.718,1.704),
+                      separation=c(241.9,242.5),s_separation=c(657.3,657.3),rate_terms=c(95,95),
+                      mpa=c(78.2,77.9),load_time=c(18.1,18.2),highpressure_time=c(74,56))
+
+predict(m, newdata = new.data, interval="confidence")
+```
+
+    ##        fit      lwr      upr
+    ## 1 24.42798 24.33378 24.52218
+    ## 2 24.09751 24.00560 24.18941
+
+### 최적 변수 찾기
+
+#### 중요변수 찾기
+
+-   여러 독립변수를 이용해 모델을 구성할 수 있지만 그 속엔 모델
+
+#### 모델의 상대적 가치 판정 방법 : AIC
+
+-   낮을수록 좋은 모델.
+
+-   변수 선택법
+
+1.  전진선택법
+
+-   아무 변수도 넣지 않은 모형에서 변수를 추가하며 AIC 값을 보고 선택하는 방법
+
+1.  후진제거법
+
+-   다 들어있는 상태에서 하나씩 변수를 빼면서 AIC 값을 보고 선택하는 방법.
+
+1.  단계별 선택법
+
+-   전진선택법과 후진제거법을 결합한 것으로 변수의 추가 삭제를 반복한다.
+
+``` r
+head(swiss)
+```
+
+    ##              Fertility Agriculture Examination Education Catholic
+    ## Courtelary        80.2        17.0          15        12     9.96
+    ## Delemont          83.1        45.1           6         9    84.84
+    ## Franches-Mnt      92.5        39.7           5         5    93.40
+    ## Moutier           85.8        36.5          12         7    33.77
+    ## Neuveville        76.9        43.5          17        15     5.16
+    ## Porrentruy        76.1        35.3           9         7    90.57
+    ##              Infant.Mortality
+    ## Courtelary               22.2
+    ## Delemont                 22.2
+    ## Franches-Mnt             20.2
+    ## Moutier                  20.3
+    ## Neuveville               20.6
+    ## Porrentruy               26.6
+
+``` r
+m <- lm(Fertility ~., data=swiss)
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Fertility ~ ., data = swiss)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -15.2743  -5.2617   0.5032   4.1198  15.3213 
+    ## 
+    ## Coefficients:
+    ##                  Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)      66.91518   10.70604   6.250 1.91e-07 ***
+    ## Agriculture      -0.17211    0.07030  -2.448  0.01873 *  
+    ## Examination      -0.25801    0.25388  -1.016  0.31546    
+    ## Education        -0.87094    0.18303  -4.758 2.43e-05 ***
+    ## Catholic          0.10412    0.03526   2.953  0.00519 ** 
+    ## Infant.Mortality  1.07705    0.38172   2.822  0.00734 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 7.165 on 41 degrees of freedom
+    ## Multiple R-squared:  0.7067, Adjusted R-squared:  0.671 
+    ## F-statistic: 19.76 on 5 and 41 DF,  p-value: 5.594e-10
+
+1.  회귀계수의 유의성 : 유의수준 95% 하에 'Examination' 변수를 제외한 나머지 독립변수들은 통계적으로 유의하다고 할 수 있다.
+2.  회귀모형의 유의성 : p 값이 유의수준보다 높으므로 이 모형은 통계적으로 유의하다고 할 수 없다.
+3.  모형의 설명력 : R-squared 값이 0.671로 67.1% 의 통계적인 설명력을 갖는다고 할 수 있다.
+
+#### 전진선택법
+
+``` r
+step(m, direction = "forward") # AIC = 190.69, 추정된 모수를 알 수 있다.
+```
+
+    ## Start:  AIC=190.69
+    ## Fertility ~ Agriculture + Examination + Education + Catholic + 
+    ##     Infant.Mortality
+
+    ## 
+    ## Call:
+    ## lm(formula = Fertility ~ Agriculture + Examination + Education + 
+    ##     Catholic + Infant.Mortality, data = swiss)
+    ## 
+    ## Coefficients:
+    ##      (Intercept)       Agriculture       Examination         Education  
+    ##          66.9152           -0.1721           -0.2580           -0.8709  
+    ##         Catholic  Infant.Mortality  
+    ##           0.1041            1.0770
+
+``` r
+m<- lm(Fertility~Agriculture, data=swiss) # 당연히 간명성이 높다는 것을 알 수 있다.
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Fertility ~ Agriculture, data = swiss)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -25.5374  -7.8685  -0.6362   9.0464  24.4858 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 60.30438    4.25126  14.185   <2e-16 ***
+    ## Agriculture  0.19420    0.07671   2.532   0.0149 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 11.82 on 45 degrees of freedom
+    ## Multiple R-squared:  0.1247, Adjusted R-squared:  0.1052 
+    ## F-statistic: 6.409 on 1 and 45 DF,  p-value: 0.01492
+
+#### 후진제거법
+
+``` r
+m<-lm(Fertility~., data=swiss)
+step(m, direction = "backward") # AIC 가  234.09에서 189.86.
+```
+
+    ## Start:  AIC=190.69
+    ## Fertility ~ Agriculture + Examination + Education + Catholic + 
+    ##     Infant.Mortality
+    ## 
+    ##                    Df Sum of Sq    RSS    AIC
+    ## - Examination       1     53.03 2158.1 189.86
+    ## <none>                          2105.0 190.69
+    ## - Agriculture       1    307.72 2412.8 195.10
+    ## - Infant.Mortality  1    408.75 2513.8 197.03
+    ## - Catholic          1    447.71 2552.8 197.75
+    ## - Education         1   1162.56 3267.6 209.36
+    ## 
+    ## Step:  AIC=189.86
+    ## Fertility ~ Agriculture + Education + Catholic + Infant.Mortality
+    ## 
+    ##                    Df Sum of Sq    RSS    AIC
+    ## <none>                          2158.1 189.86
+    ## - Agriculture       1    264.18 2422.2 193.29
+    ## - Infant.Mortality  1    409.81 2567.9 196.03
+    ## - Catholic          1    956.57 3114.6 205.10
+    ## - Education         1   2249.97 4408.0 221.43
+
+    ## 
+    ## Call:
+    ## lm(formula = Fertility ~ Agriculture + Education + Catholic + 
+    ##     Infant.Mortality, data = swiss)
+    ## 
+    ## Coefficients:
+    ##      (Intercept)       Agriculture         Education          Catholic  
+    ##          62.1013           -0.1546           -0.9803            0.1247  
+    ## Infant.Mortality  
+    ##           1.0784
+
+#### 단계별선택법
+
+``` r
+m<-lm(Fertility~., data=swiss)
+step(m, direction = "both") # AIC = 190.69 에서 189.86.
+```
+
+    ## Start:  AIC=190.69
+    ## Fertility ~ Agriculture + Examination + Education + Catholic + 
+    ##     Infant.Mortality
+    ## 
+    ##                    Df Sum of Sq    RSS    AIC
+    ## - Examination       1     53.03 2158.1 189.86
+    ## <none>                          2105.0 190.69
+    ## - Agriculture       1    307.72 2412.8 195.10
+    ## - Infant.Mortality  1    408.75 2513.8 197.03
+    ## - Catholic          1    447.71 2552.8 197.75
+    ## - Education         1   1162.56 3267.6 209.36
+    ## 
+    ## Step:  AIC=189.86
+    ## Fertility ~ Agriculture + Education + Catholic + Infant.Mortality
+    ## 
+    ##                    Df Sum of Sq    RSS    AIC
+    ## <none>                          2158.1 189.86
+    ## + Examination       1     53.03 2105.0 190.69
+    ## - Agriculture       1    264.18 2422.2 193.29
+    ## - Infant.Mortality  1    409.81 2567.9 196.03
+    ## - Catholic          1    956.57 3114.6 205.10
+    ## - Education         1   2249.97 4408.0 221.43
+
+    ## 
+    ## Call:
+    ## lm(formula = Fertility ~ Agriculture + Education + Catholic + 
+    ##     Infant.Mortality, data = swiss)
+    ## 
+    ## Coefficients:
+    ##      (Intercept)       Agriculture         Education          Catholic  
+    ##          62.1013           -0.1546           -0.9803            0.1247  
+    ## Infant.Mortality  
+    ##           1.0784
+
+**Examination 데이터를 제거한 모델이 좋은 모델이라고 할 수 있다.**
+
+#### 실습
+
+``` r
+m <- lm(c_thickness~., data=autoparts2)
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ ., data = autoparts2)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -24.8428  -0.6105  -0.0214   0.5606  29.6508 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error  t value Pr(>|t|)    
+    ## (Intercept)        7.146e+02  3.367e+00  212.225  < 2e-16 ***
+    ## fix_time           6.010e-02  5.331e-03   11.273  < 2e-16 ***
+    ## a_speed           -1.738e+01  4.223e-01  -41.152  < 2e-16 ***
+    ## b_speed            1.952e+00  1.516e-01   12.876  < 2e-16 ***
+    ## separation        -7.592e-01  3.635e-03 -208.873  < 2e-16 ***
+    ## s_separation      -7.468e-01  3.673e-03 -203.317  < 2e-16 ***
+    ## rate_terms         1.133e-02  3.597e-03    3.151  0.00163 ** 
+    ## mpa               -1.520e-01  1.458e-03 -104.253  < 2e-16 ***
+    ## load_time         -1.523e-01  8.381e-03  -18.171  < 2e-16 ***
+    ## highpressure_time -2.174e-05  8.738e-06   -2.488  0.01284 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.796 on 21757 degrees of freedom
+    ## Multiple R-squared:  0.7841, Adjusted R-squared:  0.784 
+    ## F-statistic:  8782 on 9 and 21757 DF,  p-value: < 2.2e-16
+
+``` r
+#전진선택법
+step(m, direction="forward")
+```
+
+    ## Start:  AIC=25500.35
+    ## c_thickness ~ fix_time + a_speed + b_speed + separation + s_separation + 
+    ##     rate_terms + mpa + load_time + highpressure_time
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ fix_time + a_speed + b_speed + separation + 
+    ##     s_separation + rate_terms + mpa + load_time + highpressure_time, 
+    ##     data = autoparts2)
+    ## 
+    ## Coefficients:
+    ##       (Intercept)           fix_time            a_speed  
+    ##         7.146e+02          6.010e-02         -1.738e+01  
+    ##           b_speed         separation       s_separation  
+    ##         1.952e+00         -7.592e-01         -7.468e-01  
+    ##        rate_terms                mpa          load_time  
+    ##         1.133e-02         -1.520e-01         -1.523e-01  
+    ## highpressure_time  
+    ##        -2.174e-05
+
+``` r
+#후진제거법
+step(m, direction="backward")
+```
+
+    ## Start:  AIC=25500.35
+    ## c_thickness ~ fix_time + a_speed + b_speed + separation + s_separation + 
+    ##     rate_terms + mpa + load_time + highpressure_time
+    ## 
+    ##                     Df Sum of Sq    RSS   AIC
+    ## <none>                            70175 25500
+    ## - highpressure_time  1        20  70195 25505
+    ## - rate_terms         1        32  70207 25508
+    ## - fix_time           1       410  70585 25625
+    ## - b_speed            1       535  70710 25664
+    ## - load_time          1      1065  71240 25826
+    ## - a_speed            1      5462  75637 27130
+    ## - mpa                1     35055 105230 34318
+    ## - s_separation       1    133330 203505 48674
+    ## - separation         1    140717 210892 49450
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ fix_time + a_speed + b_speed + separation + 
+    ##     s_separation + rate_terms + mpa + load_time + highpressure_time, 
+    ##     data = autoparts2)
+    ## 
+    ## Coefficients:
+    ##       (Intercept)           fix_time            a_speed  
+    ##         7.146e+02          6.010e-02         -1.738e+01  
+    ##           b_speed         separation       s_separation  
+    ##         1.952e+00         -7.592e-01         -7.468e-01  
+    ##        rate_terms                mpa          load_time  
+    ##         1.133e-02         -1.520e-01         -1.523e-01  
+    ## highpressure_time  
+    ##        -2.174e-05
+
+``` r
+#단계별선택법
+step(m, direction="both")
+```
+
+    ## Start:  AIC=25500.35
+    ## c_thickness ~ fix_time + a_speed + b_speed + separation + s_separation + 
+    ##     rate_terms + mpa + load_time + highpressure_time
+    ## 
+    ##                     Df Sum of Sq    RSS   AIC
+    ## <none>                            70175 25500
+    ## - highpressure_time  1        20  70195 25505
+    ## - rate_terms         1        32  70207 25508
+    ## - fix_time           1       410  70585 25625
+    ## - b_speed            1       535  70710 25664
+    ## - load_time          1      1065  71240 25826
+    ## - a_speed            1      5462  75637 27130
+    ## - mpa                1     35055 105230 34318
+    ## - s_separation       1    133330 203505 48674
+    ## - separation         1    140717 210892 49450
+
+    ## 
+    ## Call:
+    ## lm(formula = c_thickness ~ fix_time + a_speed + b_speed + separation + 
+    ##     s_separation + rate_terms + mpa + load_time + highpressure_time, 
+    ##     data = autoparts2)
+    ## 
+    ## Coefficients:
+    ##       (Intercept)           fix_time            a_speed  
+    ##         7.146e+02          6.010e-02         -1.738e+01  
+    ##           b_speed         separation       s_separation  
+    ##         1.952e+00         -7.592e-01         -7.468e-01  
+    ##        rate_terms                mpa          load_time  
+    ##         1.133e-02         -1.520e-01         -1.523e-01  
+    ## highpressure_time  
+    ##        -2.174e-05
+
+#### 연습문제
+
+\`\`\`{r} 성적과 IQ 간의 회귀식을 통하여 IQ가 125 인 사람의 성적을 예측해 보시오. score &lt;- data.frame(성적=c(90,75,77,83,65,80,83,70,87,79), IQ=c(140,125,120,135,105,123,132,115,128,131), 다니는학원수=c(2,1,1,2,0,3,3,1,4,2), 게임하는시간=c(1,3,0,3,4,1,4,1,0,2), TV시청시간=c(0,3,4,2,4,1,1,3,0,3)) m &lt;- lm(성적~IQ, data=score) summary(m) predict(m, newdata = data.frame(IQ=125))
+
+다니는 학원수가 3개 일경우의 성적 예측
+======================================
+
+lm2 &lt;- lm(성적~다니는학원수, data=score) predict(lm2, newdata=data.frame(다니는학원수=3))
+
+여러 독립변수를 통한 성적 예측
+==============================
+
+lm3 &lt;- lm(성적~IQ+다니는학원수+게임하는시간+TV시청시간, data=score) lm3
+
+IQ가 130(x1), 학원을 3개(x2) 다니고, 게임 2시간(x3), TV 1시간(x4) == &gt; 예상되는 성적(y)은 ?
+==============================================================================================
+
+y = (130*0.4684) + (3*0.7179) + (2*(-0.8390)) + (1*(-1.3854))
+
+\`\`\`
+
+#### 집에 가는 문제
+
+``` r
+x <- iris
+sepalL <- x$Sepal.Length
+sepalW <- x$Sepal.Width
+petalL <- x$Petal.Length
+petalW <- x$Petal.Width
+
+#꽃받침의 길이를 예측하기 위한 다중 회귀 모형
+m <- lm(formula = sepalL~sepalW+petalL+petalW, data=x)
+summary(m)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = sepalL ~ sepalW + petalL + petalW, data = x)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.82816 -0.21989  0.01875  0.19709  0.84570 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  1.85600    0.25078   7.401 9.85e-12 ***
+    ## sepalW       0.65084    0.06665   9.765  < 2e-16 ***
+    ## petalL       0.70913    0.05672  12.502  < 2e-16 ***
+    ## petalW      -0.55648    0.12755  -4.363 2.41e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.3145 on 146 degrees of freedom
+    ## Multiple R-squared:  0.8586, Adjusted R-squared:  0.8557 
+    ## F-statistic: 295.5 on 3 and 146 DF,  p-value: < 2.2e-16
+
