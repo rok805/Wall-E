@@ -1,0 +1,47 @@
+---
+title: make package
+layout: post
+---
+
+library(devtools)
+
+library(roxygen2)
+
+setwd("/Users/baek0508/Documents/2018 Big DATA/project/makepackages/")
+getwd()
+create("helloworld")
+
+
+
+test=function(x){
+  y=x+1
+  return(y)
+}
+
+
+#' test # 함수이름
+#' 
+#' This is test function # 함수설명
+#' @param x vector. This is argument
+#' @return Summed Num
+#' @export 
+#' @examples
+#' test(3)
+#' 
+#' 
+#' 
+#' 
+#'
+
+setwd("./makepackages/helloworld/")
+document()
+
+
+setwd("../")
+getwd()
+
+install("helloworld")
+
+
+
+  
